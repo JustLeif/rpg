@@ -8,4 +8,4 @@ run:
 	$(GOPATH)/bin/air --build.cmd "go build -o bin/api main.go" --build.bin "./bin/api"
 
 test:
-	go test
+	go test ./tests
