@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"xes.software/2d-game/lib/utils"
+	"xes.software/rpg/lib/utils"
 )
 
 func TestLoadEnvVars(t *testing.T) {

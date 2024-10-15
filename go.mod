@@ -1,4 +1,4 @@
-module xes.software/2d-game
+module xes.software/rpg
 
 go 1.22.1
 

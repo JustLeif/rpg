@@ -8,7 +8,8 @@ import (
 	"sync"
 
 	"github.com/gorilla/websocket"
-	"xes.software/2d-game/lib/utils"
+	"github.com/joho/godotenv"
+	"xes.software/rpg/lib/utils"
 )
 
 // Define an upgrader for WebSocket connections
@@ -70,8 +71,12 @@ func broadcastMessage(msg []byte) {
 }
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("godotenv has failed to log a .env file: %s", err.Error())
+	}
 
-	vars := utils.LoadEnvVars()
+	vars := utils.GetEnvVars()
 	logger := utils.NewLogger(vars.Environment)
 	logger.DevLog(os.Stdout, "Hello!\n")
 
@@ -79,7 +84,7 @@ func main() {
 
 	// Start WebSocket server
 	log.Println("Starting server on :8080")
-	err := http.ListenAndServe(":8080", nil)
+	err = http.ListenAndServe(":8080", nil)
 	if err != nil {
 		log.Fatal("ListenAndServe error:", err)
 	}
