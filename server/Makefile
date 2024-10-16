@@ -4,8 +4,8 @@ GOPATH := $(shell go env GOPATH)
 air-install:
 	go install github.com/air-verse/air@latest
 
-run:
-	$(GOPATH)/bin/air --build.cmd "go build -o bin/api main.go" --build.bin "./bin/api"
+serve:
+	$(GOPATH)/bin/air --build.cmd "go build -o ./bin/app main.go" --build.bin "./bin/app"
 
 test:
 	go test ./tests

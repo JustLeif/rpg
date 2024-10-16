@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"log"
 	"os"
 )
 
@@ -14,11 +15,11 @@ func GetEnvVars() *EnvVars {
 	var envVars EnvVars
 	envVars.Environment = Environment(os.Getenv("ENVIRONMENT"))
 	if envVars.Environment == "" {
-		panic("failure to load the 'ENVIRONMENT' environment variable.")
+		log.Fatal("failure to load the 'ENVIRONMENT' environment variable.")
 	}
 	envVars.Domain = os.Getenv("DOMAIN")
 	if envVars.Domain == "" {
-		panic("failure to load the 'DOMAIN' environment variable.")
+		log.Fatal("failure to load the 'DOMAIN' environment variable.")
 	}
 
 	return &envVars

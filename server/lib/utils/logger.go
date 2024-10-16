@@ -29,13 +29,15 @@ func (l Logger) DevLog(w io.Writer, format string, a ...interface{}) (n int, err
 	if l.Environment == Production {
 		return 0, nil
 	}
-	return fmt.Fprintf(w, format, a...)
+	str := append([]byte(format), []byte("\n")...)
+	return fmt.Fprintf(w, string(str), a...)
 }
 
 /* Behaves like `fmt.Fprintf()`, but only in the production environment. */
 func (l Logger) ProdLog(w io.Writer, format string, a ...interface{}) (n int, err error) {
 	if l.Environment == Production {
-		return fmt.Fprintf(w, format, a...)
+		str := append([]byte(format), []byte("\n")...)
+		return fmt.Fprintf(w, string(str), a...)
 	} else {
 		return 0, nil
 	}
@@ -43,5 +45,6 @@ func (l Logger) ProdLog(w io.Writer, format string, a ...interface{}) (n int, er
 
 /* Behaves like `fmt.Printf()`. */
 func (l Logger) Log(w io.Writer, format string, a ...interface{}) (n int, err error) {
-	return fmt.Fprintf(w, format, a...)
+	str := append([]byte(format), []byte("\n")...)
+	return fmt.Fprintf(w, string(str), a...)
 }
