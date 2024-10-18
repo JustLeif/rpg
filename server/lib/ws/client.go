@@ -9,9 +9,11 @@ import (
 )
 
 type Client struct {
-	Conn *websocket.Conn
-	Send chan []byte
-	raid *Raid
+	Conn     *websocket.Conn
+	Send     chan []byte
+	JoinRaid chan *Raid
+	raid     *Raid
+	Hub      *Hub
 }
 
 type ClientMessage struct {
@@ -33,16 +35,19 @@ const (
 	SendMessage ClientMessageType = "send_message"
 )
 
-func CreateClient(conn *websocket.Conn, logger *utils.Logger) *Client {
+func CreateClient(conn *websocket.Conn, logger *utils.Logger, h *Hub) *Client {
 	client := &Client{
-		Conn: conn,
-		Send: make(chan []byte),
+		Conn:     conn,
+		Send:     make(chan []byte),
+		JoinRaid: make(chan *Raid),
+		Hub:      h,
 	}
-	logger.DevLog(os.Stdout, "creating a new client: %v", client)
+	logger.DevLog(os.Stdout, "creating a new client: %+v", *client)
+	go client.Run(logger, h)
 	return client
 }
 
-func (c *Client) readPump(logger *utils.Logger, rm *RaidsMap) {
+func (c *Client) readPump(logger *utils.Logger, hub *Hub) {
 	defer c.Conn.Close()
 	for {
 		_, message, err := c.Conn.ReadMessage()
@@ -70,13 +75,7 @@ func (c *Client) readPump(logger *utils.Logger, rm *RaidsMap) {
 				continue
 			}
 			logger.DevLog(os.Stdout, "client requested to join raid with id: %s", joinRaidData.Uuid)
-			// check if raid currently exists
-			raid, ok := rm.Load(joinRaidData.Uuid)
-			if !ok {
-				raid = CreateRaid(logger, rm)
-				logger.DevLog(os.Stdout, "created a raid with id: %s", raid.Uuid)
-			}
-			raid.ConnectClient <- c
+			hub.StartRaid <- joinRaidData.Uuid
 		} else if clientMsg.Type == SendMessage {
 			// send message
 			var sendMessageData ClientMessageSendMessage
@@ -107,12 +106,15 @@ func (c *Client) writePump(logger *utils.Logger) {
 				logger.DevLog(os.Stdout, "error while writing a message to connection: %s", err.Error())
 				return
 			}
+		case raid, ok := <-c.JoinRaid:
+			logger.DevLog(os.Stdout, "recieved a JoinRaid event:%s ok:%t", string(raid.Uuid.String()), ok)
+			c.raid = raid
 		}
 	}
 }
 
 /* Spawns 2 goroutines, one for handling reads on a connection, and one for writes. */
-func (c *Client) Run(logger *utils.Logger, rm *RaidsMap) {
+func (c *Client) Run(logger *utils.Logger, h *Hub) {
 	go c.writePump(logger)
-	go c.readPump(logger, rm)
+	go c.readPump(logger, h)
 }

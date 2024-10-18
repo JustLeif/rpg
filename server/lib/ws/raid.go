@@ -2,7 +2,6 @@ package ws
 
 import (
 	"os"
-	"sync"
 
 	"github.com/google/uuid"
 	"xes.software/rpg/lib/utils"
@@ -19,7 +18,7 @@ type Raid struct {
 }
 
 /* returns a raid pointer, and start's the raid on it's own goroutine (will clean up itself). */
-func CreateRaid(logger *utils.Logger, rm *RaidsMap) *Raid {
+func CreateRaid(logger *utils.Logger) *Raid {
 	raid := &Raid{
 		clients:          make(map[*Client]bool),
 		Uuid:             uuid.New(),
@@ -29,13 +28,13 @@ func CreateRaid(logger *utils.Logger, rm *RaidsMap) *Raid {
 		DisconnectClient: make(chan *Client),
 		SetState:         make(chan string),
 	}
-	rm.Store(raid.Uuid.String(), raid)
+	go raid.Run(logger)
+	logger.DevLog(os.Stdout, "raid %s was created.", raid.Uuid.String())
 	return raid
 }
 
-func (r *Raid) run(logger *utils.Logger, rm *RaidsMap) {
-	rm.Store(r.Uuid.String(), r)
-	defer rm.Delete(r.Uuid.String())
+func (r *Raid) Run(logger *utils.Logger) {
+	defer logger.DevLog(os.Stdout, "raid %s was destroyed and resources freed.", r.Uuid.String())
 	for {
 		select {
 		case broadcast, ok := <-r.broadcast:
@@ -63,26 +62,4 @@ func (r *Raid) run(logger *utils.Logger, rm *RaidsMap) {
 			}
 		}
 	}
-}
-
-/* thread safe map of [raid.Uuid.ToString()] to [*Raid] */
-type RaidsMap struct {
-	internal sync.Map
-}
-
-func (m *RaidsMap) Store(key string, v *Raid) {
-	m.internal.Store(key, v)
-}
-
-func (m *RaidsMap) Load(key string) (*Raid, bool) {
-	if value, ok := m.internal.Load(key); ok {
-		if myStruct, ok := value.(*Raid); ok {
-			return myStruct, true
-		}
-	}
-	return nil, false
-}
-
-func (m *RaidsMap) Delete(key string) {
-	m.internal.Delete(key)
 }

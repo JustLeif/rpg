@@ -17,9 +17,9 @@ func main() {
 	}
 	envVars := utils.GetEnvVars()
 	logger := utils.NewLogger(envVars.Environment)
-	raidsMap := &ws.RaidsMap{}
+	hub := ws.CreateHub(logger)
 
-	http.HandleFunc("/ws", ws.HandleWs(envVars, logger, raidsMap))
+	http.HandleFunc("/ws", ws.HandleWs(envVars, logger, hub))
 
 	logger.Log(os.Stdout, "Starting server on :8080")
 	err = http.ListenAndServe(":8080", nil)

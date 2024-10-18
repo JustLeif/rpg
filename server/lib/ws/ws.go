@@ -14,14 +14,13 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
-func HandleWs(envVars *utils.EnvVars, logger *utils.Logger, rm *RaidsMap) http.HandlerFunc {
+func HandleWs(envVars *utils.EnvVars, logger *utils.Logger, hub *Hub) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			logger.DevLog(os.Stdout, "upgrader.Upgrade() failed: %s", err.Error())
 			return
 		}
-		client := CreateClient(conn, logger)
-		client.Run(logger, rm)
+		hub.NewConnection <- conn
 	}
 }
